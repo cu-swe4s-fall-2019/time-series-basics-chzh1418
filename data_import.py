@@ -7,10 +7,19 @@ import datetime
 import time
 import sys
 import math
+import copy
 
 
 class ImportData:
+    """Read data_csv file and modify low and high values
+
+    Attributes:
+        _time: times column in data_csv file
+        _value: values column in data_csv file
+        _type: different types for duplicates, sum and average
+    """
     def __init__(self, data_csv):
+        """Initialize ImportData object and read in data_csv file"""
         self._time = []
         self._value = []
         self._file = data_csv
@@ -34,14 +43,12 @@ class ImportData:
             for row in reader:
                 if (row['time'] == ''):
                     continue
-                time = (datatime.datetime.strptime(
-                    row['time'], '%m/%d/%y %H:%M'))
-
+                time = (dateutil.parser.parse(row['time']))
                 try:
                     if (row['value'] == 'low'):
                         print('replace low to 40')
                         row['value'] = 40
-                    elif(row['value'] == 'high'):
+                    elif (row['value'] == 'high'):
                         print('replace high to 300')
                         row['value'] == 300
 
@@ -57,8 +64,20 @@ class ImportData:
             if (self._time[-1] < self._time[0]):
                 self._time.reverse()
                 self._value.reverse()
+            csvfile.close()
 
     def linear_search_value(self, key_time):
+        """
+        Linear search of key_time
+        Arguments
+        --------
+        key_time: time to search for
+
+        Return
+        -------
+        hits: index of matched time
+        -1: No value found
+        """
         # return list of value(s) associated with key_time
         # if none, return -1 and error message
         hits = []
@@ -71,7 +90,32 @@ class ImportData:
             return -1
         return hits
 
+    def binary_sort(self):
+        times = self._time.copy()
+        values = self._value.copy()
+        zipped = zip(times, values)
+        zipped_sort = sorted(zipped)
+
+        times_tup, values_tup = zip(*zipped_sort)
+        times_sorted = list(times_tup)
+        values_sorted = list(values_tup)
+        self._time = times_sorted
+        self._value = values_sorted
+        return
+
     def binary_search_value(self, key_time):
+        """
+        Binary search of key_time
+
+        Arguments
+        -------
+        key_time: time to search for
+
+        Returns
+        -------
+        hits: index of matched tiime
+        -1: No hits found
+        """
         # optional extra credit
         # return list of value(s) associated with key_time
         # if none, return -1 and error message
@@ -97,6 +141,17 @@ class ImportData:
 
 
 def roundTimeArray(obj, res):
+    """
+    Given a time resolution, group times
+    Arguments
+    --------
+    obj: ImportData object
+    res: integer
+         minute resolution of time
+    Returns
+    --------
+    Zipped object of grouped times and values
+    """
     # Inputs: obj (ImportData Object) and res (rounding resoultion)
     # objective:
     # create a list of datetime entries and associated values
@@ -107,41 +162,27 @@ def roundTimeArray(obj, res):
     # return: iterable zip object of the two lists
     # note: you can create additional variables to help with this task
     # which are not returned
-    time_list = []
-    values = []
-    num_times = len(obj._time)
+    time_rounded_obj = copy.deepcopy(obj)
+    rounded_times = []
+    unique_rounded_times = []
 
-    for i in range(num_times):
-        time = obj._time[i]
-        bad_time = datetime.timedelta(minutes=time.minute % res,
-                                      seconds=time.second)
-        time -= bad_time
-        if (bad_time >= datetime.timedelta(minutes=math.ceil(res/2))):
-            time += datetime.timedelta(minutes=res)
-        obj._time[i] = time
-
-    if num_times > 0:
-        time_list.append(obj._time[0])
-        search_results = obj.linear_search_value(obj._time[0])
-        # summaiton
-        if type == 0:
-            values.append(sum(search))
-        # Average
-        elif type == 1:
-            values.append(sum(search)/len(search))
-
-    for i in range(1, num_times):
-        if obj._time[i] == obj._time[i - 1]:
-            continue
+    for time in time_rounded_obj._time:
+        minminus = datetime.timedelta(minutes=(time.minute % res))
+        minplus = datetime.timedelta(minutes=res) - minminus
+        if (time.minute % res) <= (res/2):
+            newtime = time - minminus
+            if newtime not in rounded_times:
+                unique_rounded_times.append(newtime)
+            rounded_times.append(newtime)
         else:
-            time_list.append(obj._time[i])
-            search = obj.linear_search_value(obj._time[i])
-            if type == 0:
-                values.append(sum(search))
-            elif type == 1:
-                values.append(sum(search)/len(search))
-    output = zip(time_list, values)
-    return output
+            newtime = time + minplus
+            if newtime not in rounded_times:
+                unique_rounded_times.append(newtime)
+            rounded_times.append(newtime)
+
+    time_rounded_obj._time = rounded_times
+    
+    sorted_values = [[] for i in range(len(unique_rounded_times"""""""
 
 
 def printArray(data_list, annotation_list, base_name, key_file):
@@ -150,7 +191,6 @@ def printArray(data_list, annotation_list, base_name, key_file):
     data_list_b = []
     anno_list_a = []
     anno_list_b = []
-    output = base_name + '.csv'
     if isfile(output):
         raise NameError('File already exist')
     if key_file not in annotation_list:
@@ -169,15 +209,15 @@ def printArray(data_list, annotation_list, base_name, key_file):
         writer = csv.writer(output, delimiter=',')
         writer.writerow(attributes)
         for (time1, value1) in data_list_a[0]:
-            list1 = []
+            left_values = []
             for data in data_list_b:
-                list1_len = len(list1)
+                left_values_len = len(left_values)
                 for (time2, value2) in data:
                     if (time1 == time2):
-                        list1.append(value2)
-                if(len(list1) == list1_len):
-                    list1.append(0)
-            writer.writeow([time1, value1] + list1)
+                        left_values.append(value2)
+                if(len(left_values) == left_values_len):
+                    left_values.append(0)
+            writer.writeow([time1, value1] + left_values)
 
 
 
