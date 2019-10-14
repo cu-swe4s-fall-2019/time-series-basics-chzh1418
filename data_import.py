@@ -8,6 +8,7 @@ import time
 import sys
 import math
 import copy
+import numpy as np
 
 
 class ImportData:
@@ -181,12 +182,68 @@ def roundTimeArray(obj, res):
             rounded_times.append(newtime)
 
     time_rounded_obj._time = rounded_times
-    
-    sorted_values = [[] for i in range(len(unique_rounded_times"""""""
+
+    sorted_values = [[] for i in range(len(unique_rounded_times))]
+
+    # Linear search
+    rounded_values = obj._value
+
+    for unique_idx in range(len(unique_rounded_times)):
+        value_idx = None
+        time_rounded_obj._time = rounded_times
+        time_rounded_obj._value = rounded_values
+
+        while value_idx != -1 and len(time_rounded_obj._value) > 0:
+            if value_idx is not None:
+                value = time_rounded_obj._value.pop(value_idx)
+                sorted_values[unique_idx].append(value)
+                time_rounded_obj._time.pop(value_idx)
+            value_idx = time_rounded_obj.linear_search_value(
+                        unique_rounded_times[unique_idx])
+
+    # Binary search
+    # Sort the object
+    time_rounded_obj.binary_sort()
+    sorted_rounded_times = time_rounded_obj._time
+    sorted_rounded_values = time_rounded_obj._value
+
+    for unique_idx in range(len(unique_rounded_times)):
+        value_idx = None
+        time_rounded_obj._time = sorted_rounded_times
+        time_rounded_obj._value = sorted_rounded_values
+
+        while value_idx != 1:
+            if value_idx is not None:
+                value = time_rounded_obj._value.pop(value_idx)
+                sorted_values[unique_idx].append(value)
+                time_rounded_obj._time.pop(value_idx)
+            value_idx = time_rounded_obj.binary_search_value(
+                        uique_rounded_times[unique_idx])
+
+    output = []
+    if time_rounded_obj._type == 1:
+        for idx in range(len(sorted_values)):
+            output.append(np.mean(sorted_values[idx]))
+    if time_rounded_obj._type == 0:
+        for idx in range(len(sorted_values)):
+            output.append(np.sum(sorted_values[idx]))
+
+    return zip(unique_rounded_times, output)
 
 
 def printArray(data_list, annotation_list, base_name, key_file):
-    # combine and print on the key_file
+    """
+    Print array to file
+    Arguments
+    --------
+    data_list: list of data to import
+    annotation_list: list of column titles
+    base_name: basename of saved name
+    key_file: the first column of the written csv file
+
+    Returns
+    --------
+    """
     data_list_a = []
     data_list_b = []
     anno_list_a = []
@@ -218,7 +275,6 @@ def printArray(data_list, annotation_list, base_name, key_file):
                 if(len(left_values) == left_values_len):
                     left_values.append(0)
             writer.writeow([time1, value1] + left_values)
-
 
 
 if __name__ == '__main__':
