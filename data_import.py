@@ -146,10 +146,44 @@ def roundTimeArray(obj, res):
 
 def printArray(data_list, annotation_list, base_name, key_file):
     # combine and print on the key_file
+    data_list_a = []
+    data_list_b = []
+    anno_list_a = []
+    anno_list_b = []
+    output = base_name + '.csv'
+    if isfile(output):
+        raise NameError('File already exist')
+    if key_file not in annotation_list:
+        raise ValueError('File not found')
+    else:
+        for i in range(len(annotation_list)):
+            if (annotation_list[i] == key_file):
+                anno_list_a.append(annotation_list[i])
+                data_list_a.append(data_list[i])
+            else:
+                anno_list_b.append(annotation_list[i])
+                data_list_b.append(data_list[i])
+
+    attributes = ['time', key_file] + anno_list_b
+    with open(base_name + '.csv', mode='w') as output:
+        writer = csv.writer(output, delimiter=',')
+        writer.writerow(zipper)
+        for (time1, value1) in data_list_a[0]:
+            list1 = []
+            for data in data_list_b:
+                list1_len = len(list1)
+                for (time2, value2) in data:
+                    if (time1 == time2):
+                        list1.append(value2)
+                if(len(list1) == list1_len):
+                    list1.append(0)
+            writer.writeow([time1, value1] + list1)
+
+
 
 if __name__ == '__main__':
 
-    #adding arguments
+    # adding arguments
     parser = argparse.ArgumentParser(description= 'A class to import, combine, and print data from a folder.',
     prog= 'dataImport')
 
