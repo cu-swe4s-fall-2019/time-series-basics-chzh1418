@@ -167,7 +167,7 @@ def printArray(data_list, annotation_list, base_name, key_file):
     attributes = ['time', key_file] + anno_list_b
     with open(base_name + '.csv', mode='w') as output:
         writer = csv.writer(output, delimiter=',')
-        writer.writerow(zipper)
+        writer.writerow(attributes)
         for (time1, value1) in data_list_a[0]:
             list1 = []
             for data in data_list_b:
