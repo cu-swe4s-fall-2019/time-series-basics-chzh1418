@@ -6,6 +6,7 @@ import random
 import statistics
 from os.path import join
 
+
 class Test_Math_Lib(unittest.TestCase):
     def test_import_data(self):
         file = './smallData/activity_small.csv'
@@ -23,7 +24,7 @@ class Test_Math_Lib(unittest.TestCase):
         input = data_import.ImportData(file)
         test_data = datetime.datetime(2019, 3, 12, 0, 11)
         self.assertEqual(input.linear_search_value(test_data), -1)
-    
+
     def test_binary_search(self):
         file = './smallData/activity_small.csv'
         input = data_import.ImportData(file)
@@ -77,7 +78,8 @@ class Test_Math_Lib(unittest.TestCase):
         files_lst = os.listdir('./smallData/')
         data_lst = []
         for f in files_lst:
-            data_lst.append(data_import.ImportData(join('./smallData/', f)))
+            if f.endswith('.csv'):
+                data_lst.append(data_import.ImportData(join('./smallData/', f)))
 
         data_5 = []
         for obj in data_lst:
@@ -87,8 +89,7 @@ class Test_Math_Lib(unittest.TestCase):
                                    'smbg_small.csv')
         self.assertTrue(os.path.exists('out_5.csv'))
         os.remove('out_5.csv')
+
+
 if __name__ == '__main__':
     unittest.main()
-
-
-
