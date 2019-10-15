@@ -6,7 +6,6 @@ import argparse
 import datetime
 import time
 import sys
-import math
 import copy
 import numpy as np
 
