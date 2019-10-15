@@ -79,14 +79,15 @@ class Test_Math_Lib(unittest.TestCase):
         data_lst = []
         for f in files_lst:
             if f.endswith('.csv'):
-                data_lst.append(data_import.ImportData(join('./smallData/', f)))
+                data_lst.append(data_import.ImportData(
+                                join('./smallData/', f)))
 
         data_5 = []
         for obj in data_lst:
             data_5.append(data_import.roundTimeArray(obj, 5))
 
         r = data_import.printArray(data_5, files_lst, 'out_5',
-                                   'smbg_small.csv')
+                                   'hr_small.csv')
         self.assertTrue(os.path.exists('out_5.csv'))
         os.remove('out_5.csv')
 
