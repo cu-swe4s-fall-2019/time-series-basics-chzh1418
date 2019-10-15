@@ -23,7 +23,6 @@ class ImportData:
         """Initialize ImportData object and read in data_csv file"""
         self._time = []
         self._value = []
-        self._file = data_csv
         self._type = 0
         if 'activity' in data_csv or 'bolus' in data_csv or 'meal' in data_csv:
             self._type = 0
@@ -32,11 +31,6 @@ class ImportData:
               'basal' in data_csv):
             self._type = 1
 
-        else:
-            self._type == -1
-            print("Don't know average or sum!")
-            sys.exit(1)
-
     # open file, create a reader from csv.DictReader,
     # and read input times and values
         with open(data_csv) as csvfile:
@@ -44,21 +38,22 @@ class ImportData:
             for row in reader:
                 if (row['time'] == ''):
                     continue
-                time = (dateutil.parser.parse(row['time']))
-                try:
-                    if (row['value'] == 'low'):
-                        print('replace low to 40')
-                        row['value'] = 40
-                    elif (row['value'] == 'high'):
-                        print('replace high to 300')
-                        row['value'] == 300
+                else:
+                    try:
+                        time_add = (dateutil.parser.parse(row['time']))
+                        if (row['value'] == 'low'):
+                            print('replace low to 40')
+                            val = 40
+                        elif (row['value'] == 'high'):
+                            print('replace high to 300')
+                            val = 300
 
-                    value = float(row['value'])
-                    if (not math.isnan(value)):
-                        self._value.append(value)
-                        self._time.append(time)
-                except ValueError:
-                    print('Check value: ' + row['value'])
+                        else:
+                            val = float(row['value'])
+                        self._value.append(val)
+                        self._time.append(time_add)
+                    except ValueError:
+                        print('Check value: ' + row['value'])
 
         # Check the order of time
         if (len(self._time) > 0):
@@ -121,9 +116,8 @@ class ImportData:
         # return list of value(s) associated with key_time
         # if none, return -1 and error message
         hits = []
-        low = 0
-        high = len(self._time) - 1
-        middle = -1
+        low = -1
+        high = len(self._time)
         while (high - low > 1):
             middle = (high + low) // 2
             if (self._time[middle] == key_time):
@@ -135,19 +129,18 @@ class ImportData:
         hits.append(self._value[middle])
 
         if (len(hits) == 0):
-            print('Not value found at key_time')
-            return -1
-
+            print('No value found at key_time')
+            hits = -1
         return hits
 
 
-def roundTimeArray(obj, res):
+def roundTimeArray(obj, resolution):
     """
     Given a time resolution, group times
     Arguments
     --------
     obj: ImportData object
-    res: integer
+    resolution: integer
          minute resolution of time
     Returns
     --------
@@ -163,18 +156,20 @@ def roundTimeArray(obj, res):
     # return: iterable zip object of the two lists
     # note: you can create additional variables to help with this task
     # which are not returned
+
     time_rounded_obj = copy.deepcopy(obj)
     rounded_times = []
     unique_rounded_times = []
 
     for time in time_rounded_obj._time:
-        minminus = datetime.timedelta(minutes=(time.minute % res))
-        minplus = datetime.timedelta(minutes=res) - minminus
-        if (time.minute % res) <= (res/2):
+        minminus = datetime.timedelta(minutes=(time.minute % resolution))
+        minplus = datetime.timedelta(minutes=resolution) - minminus
+        if (time.minute % resolution) <= (resolution/2):
             newtime = time - minminus
             if newtime not in rounded_times:
                 unique_rounded_times.append(newtime)
             rounded_times.append(newtime)
+
         else:
             newtime = time + minplus
             if newtime not in rounded_times:
@@ -184,8 +179,8 @@ def roundTimeArray(obj, res):
     time_rounded_obj._time = rounded_times
 
     sorted_values = [[] for i in range(len(unique_rounded_times))]
-
-    # Linear search
+    """
+    ### Linear search
     rounded_values = obj._value
 
     for unique_idx in range(len(unique_rounded_times)):
@@ -200,7 +195,8 @@ def roundTimeArray(obj, res):
                 time_rounded_obj._time.pop(value_idx)
             value_idx = time_rounded_obj.linear_search_value(
                         unique_rounded_times[unique_idx])
-
+    ###
+    """
     # Binary search
     # Sort the object
     time_rounded_obj.binary_sort()
@@ -212,14 +208,13 @@ def roundTimeArray(obj, res):
         time_rounded_obj._time = sorted_rounded_times
         time_rounded_obj._value = sorted_rounded_values
 
-        while value_idx != 1:
+        while value_idx != -1:
             if value_idx is not None:
                 value = time_rounded_obj._value.pop(value_idx)
                 sorted_values[unique_idx].append(value)
                 time_rounded_obj._time.pop(value_idx)
             value_idx = time_rounded_obj.binary_search_value(
-                        uique_rounded_times[unique_idx])
-
+                        unique_rounded_times[unique_idx])
     output = []
     if time_rounded_obj._type == 1:
         for idx in range(len(sorted_values)):
@@ -280,8 +275,8 @@ def printArray(data_list, annotation_list, base_name, key_file):
 if __name__ == '__main__':
 
     # adding arguments
-    parser = argparse.ArgumentParser(description='A class to import,
-                                     combine, and print data from a folder.',
+    parser = argparse.ArgumentParser(description='A class to import,' +
+                                     'combine, and print data from a folder.',
                                      prog='dataImport')
 
     parser.add_argument('folder_name', type=str, help='Name of the folder')
