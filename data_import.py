@@ -8,6 +8,7 @@ import time
 import sys
 import copy
 import numpy as np
+import math
 
 
 class ImportData:
@@ -133,7 +134,7 @@ class ImportData:
         return hits
 
 
-def roundTimeArray(obj, resolution):
+def roundTimeArray(obj, res):
     """
     Given a time resolution, group times
     Arguments
@@ -155,74 +156,40 @@ def roundTimeArray(obj, resolution):
     # return: iterable zip object of the two lists
     # note: you can create additional variables to help with this task
     # which are not returned
+    round_obj = copy.deepcopy(obj)
+    round_lst = []
+    values = []
+    time_entries = len(round_obj._time)
+    for i in range(time_entries):
+        tm = round_obj._time[i]
+        discard = datetime.timedelta(minutes=tm.minute % res,
+                                     seconds=tm.second)
+        tm -= discard
+        if (discard >= datetime.timedelta(
+                minutes=math.ceil(res/2))):
+            tm += datetime.timedelta(minutes=res)
+        round_obj._time[i] = tm
 
-    time_rounded_obj = copy.deepcopy(obj)
-    rounded_times = []
-    unique_rounded_times = []
+    if time_entries > 0:
+        round_lst.append(round_obj._time[0])
+        search_result = round_obj.binary_search_value(round_obj._time[0])
+        if (obj._type == 0):
+            values.append(sum(search_result))
+        elif (obj._type == 1):
+            values.append(sum(search_result)/len(search_result))
 
-    for time in time_rounded_obj._time:
-        minminus = datetime.timedelta(minutes=(time.minute % resolution))
-        minplus = datetime.timedelta(minutes=resolution) - minminus
-        if (time.minute % resolution) <= (resolution/2):
-            newtime = time - minminus
-            if newtime not in rounded_times:
-                unique_rounded_times.append(newtime)
-            rounded_times.append(newtime)
-
+    for i in range(1, time_entries):
+        if round_obj._time[i] == round_obj._time[i - 1]:
+            continue
         else:
-            newtime = time + minplus
-            if newtime not in rounded_times:
-                unique_rounded_times.append(newtime)
-            rounded_times.append(newtime)
+            round_lst.append(round_obj._time[i])
+            search_result = round_obj.binary_search_value(round_obj._time[i])
+            if obj._type == 0:
+                values.append(sum(search_result))
+            elif obj._type == 1:
+                values.append(sum(search_result)/len(search_result))
 
-    time_rounded_obj._time = rounded_times
-
-    sorted_values = [[] for i in range(len(unique_rounded_times))]
-    """
-    ### Linear search
-    rounded_values = obj._value
-
-    for unique_idx in range(len(unique_rounded_times)):
-        value_idx = None
-        time_rounded_obj._time = rounded_times
-        time_rounded_obj._value = rounded_values
-
-        while value_idx != -1 and len(time_rounded_obj._value) > 0:
-            if value_idx is not None:
-                value = time_rounded_obj._value.pop(value_idx)
-                sorted_values[unique_idx].append(value)
-                time_rounded_obj._time.pop(value_idx)
-            value_idx = time_rounded_obj.linear_search_value(
-                        unique_rounded_times[unique_idx])
-    ###
-    """
-    # Binary search
-    # Sort the object
-    time_rounded_obj.binary_sort()
-    sorted_rounded_times = time_rounded_obj._time
-    sorted_rounded_values = time_rounded_obj._value
-
-    for unique_idx in range(len(unique_rounded_times)):
-        value_idx = None
-        time_rounded_obj._time = sorted_rounded_times
-        time_rounded_obj._value = sorted_rounded_values
-
-        while value_idx != -1:
-            if value_idx is not None:
-                value = time_rounded_obj._value.pop(value_idx)
-                sorted_values[unique_idx].append(value)
-                time_rounded_obj._time.pop(value_idx)
-            value_idx = time_rounded_obj.binary_search_value(
-                        unique_rounded_times[unique_idx])
-    output = []
-    if time_rounded_obj._type == 1:
-        for idx in range(len(sorted_values)):
-            output.append(np.mean(sorted_values[idx]))
-    if time_rounded_obj._type == 0:
-        for idx in range(len(sorted_values)):
-            output.append(np.sum(sorted_values[idx]))
-
-    return zip(unique_rounded_times, output)
+    return zip(round_lst, values)
 
 
 def printArray(data_list, annotation_list, base_name, key_file):
@@ -242,6 +209,7 @@ def printArray(data_list, annotation_list, base_name, key_file):
     data_list_b = []
     anno_list_a = []
     anno_list_b = []
+    output = base_name + '.csv'
     if isfile(output):
         raise NameError('File already exist')
     if key_file not in annotation_list:
@@ -253,7 +221,7 @@ def printArray(data_list, annotation_list, base_name, key_file):
                 data_list_a.append(data_list[i])
             else:
                 anno_list_b.append(annotation_list[i])
-                data_list_b.append(data_list[i])
+                # data_list_b.append(data_list[i])
 
     attributes = ['time', key_file] + anno_list_b
     with open(base_name + '.csv', mode='w') as output:
