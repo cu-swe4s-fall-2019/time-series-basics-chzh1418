@@ -3,6 +3,7 @@ Time Series basics - importing, cleaning, printing to csv
 
 *Note date files are synthetic data. ## Modify .yaml file for continuous integration
 ## Modify .yml file for continuous integration
+[![Build Status](https://travis-ci.com/cu-swe4s-fall-2019/time-series-basics-chzh1418.svg?branch=master)](https://travis-ci.com/cu-swe4s-fall-2019/time-series-basics-chzh1418)
 ## Install
 To use this package, you need to install python3 and the following python packages:
 
